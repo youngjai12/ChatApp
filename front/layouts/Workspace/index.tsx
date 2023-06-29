@@ -7,6 +7,7 @@ import Modal from '@components/Modal';
 import useInput from '@hooks/useInput';
 import useSocket from '@hooks/useSocket';
 import Channel from '@pages/Channel';
+import VoiceTalk from '@pages/VoiceTalk';
 import DirectMessage from '@pages/DirectMessage';
 import { Button, Input, Label } from '@pages/SignUp/styles';
 import { IChannel, IUser } from '@typings/db';
@@ -36,6 +37,7 @@ import {
   Workspaces,
   WorkspaceWrapper,
 } from './styles';
+import VTList from "@components/VTList";
 
 const Workspace = () => {
   const params = useParams<{ workspace?: string }>();
@@ -184,12 +186,14 @@ const Workspace = () => {
             </Menu>
             <ChannelList />
             <DMList />
+            <VTList />
           </MenuScroll>
         </Channels>
         <Chats>
           <Switch>
             <Route path="/workspace/:workspace/channel/:channel" component={Channel} />
             <Route path="/workspace/:workspace/dm/:id" component={DirectMessage} />
+            <Route path="/workspace/:workspace/vt/:id" component={VoiceTalk} />
           </Switch>
         </Chats>
       </WorkspaceWrapper>
