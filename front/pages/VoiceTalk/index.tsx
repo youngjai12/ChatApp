@@ -28,7 +28,7 @@ const VoiceTalk = () => {
         <div>
           <VideoPlayer />
         </div>
-        <Sidebar>
+        <Sidebar user={userData.nickname}>
           <Notifications />
         </Sidebar>
       </Container>

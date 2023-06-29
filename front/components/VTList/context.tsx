@@ -31,6 +31,8 @@ interface SocketContextValue {
   callUser: (id: string) => void;
   leaveCall: () => void;
   answerCall: () => void;
+  toggleRecording: () => void;
+  recording: boolean;
 }
 
 const SocketContext = createContext<SocketContextValue | undefined>(undefined);
@@ -39,7 +41,7 @@ const SocketContext = createContext<SocketContextValue | undefined>(undefined);
 //const socket = io('https://warm-wildwood-81069.herokuapp.com');
 
 const ContextProvider: React.FC<ContextProviderProps> = ({ children }) => {
-  const [socket] = useSocket("video");
+  const [socket, discon] = useSocket("video");
 
   const [callAccepted, setCallAccepted] = useState<boolean>(false);
   const [callEnded, setCallEnded] = useState<boolean>(false);
@@ -52,6 +54,10 @@ const ContextProvider: React.FC<ContextProviderProps> = ({ children }) => {
   const userVideo = useRef<HTMLVideoElement>(null);
   const connectionRef = useRef<Peer.Instance | null>(null);
 
+  const [recording, setRecording] = useState<boolean>(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
   // 페이자가 뜨자마자 video, mic 에 접근권한 필요하니까..!
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -62,13 +68,58 @@ const ContextProvider: React.FC<ContextProviderProps> = ({ children }) => {
         }
     });
 
+    if (socket) {
+      console.log(`socket exist : ${socket}`)
+    } else {
+      console.log("socket not exist!!")
+    }
     socket?.on('me', (id) => setMe(id));
-
     socket?.on('callUser', ({ from, name: callerName, signal }) => {
       console.log(`get called from(${from}) name(${name})`)
       setCall({ isReceivingCall: true, from, name: callerName, signal });
     });
+
   }, []);
+
+  useEffect(() => {
+    if (stream) {
+      const audioStream = new MediaStream();
+      stream.getAudioTracks().forEach((track) => {
+        audioStream.addTrack(track);
+      });
+
+      mediaRecorderRef.current = new MediaRecorder(audioStream);
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const recordedBlob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(recordedBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        const date = new Date();
+        a.download = `recorded-audio_${date}.webm`;
+        a.click();
+
+        recordedChunksRef.current = [];
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [stream]);
+
+  const toggleRecording = () => {
+    if (recording) {
+      mediaRecorderRef.current?.stop();
+    } else {
+      recordedChunksRef.current = [];
+      mediaRecorderRef.current?.start();
+    }
+    setRecording((prevRecording) => !prevRecording);
+  };
 
   const answerCall = () => {
     setCallAccepted(true);
@@ -136,6 +187,8 @@ const ContextProvider: React.FC<ContextProviderProps> = ({ children }) => {
         callUser,
         leaveCall,
         answerCall,
+        toggleRecording,
+        recording
       }}
     >
       {children}
