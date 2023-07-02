@@ -816,6 +816,12 @@ router.post("/users", isNotLoggedIn, async (req, res, next) => {
   }
 });
 
+router.post("/save/memory",  async (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+
+  }
+})
+
 router.post("/users/login", isNotLoggedIn, (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {

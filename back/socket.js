@@ -12,7 +12,11 @@ module.exports = (server, app) => {
     if (!onlineMap[socket.nsp.name]) {
       onlineMap[socket.nsp.name] = {};
     }
-    console.log(`namespace ${newNamespace} nspname(${socket.nsp.name})`)
+    socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+      console.log(`callUser === namespace ${newNamespace} nspname(${socket.nsp.name})`)
+
+      newNamespace.to(userToCall).emit("callUser", { signal: signalData, from, name });
+    });
     // broadcast to all clients in the given sub-namespace
     socket.emit("hello", socket.nsp.name);
     socket.on("login", ({ id, channels }) => {
@@ -25,9 +29,7 @@ module.exports = (server, app) => {
         socket.join(`${socket.nsp.name}-${channel}`);
       });
     });
-    socket.on("callUser", ({ userToCall, signalData, from, name }) => {
-      newNamespace.to(userToCall).emit("callUser", { signal: signalData, from, name });
-    });
+
     socket.on("answerCall", (data) => {
       console.log(`data.to(${data.to})`)
       newNamespace.to(data.to).emit("callAccepted", data.signal)

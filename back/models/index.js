@@ -7,6 +7,7 @@ const dm = require("./dm");
 const user = require("./user");
 const mention = require("./mention");
 const workspaceMember = require("./workspaceMember");
+const memory = require("./memory")
 
 const env = process.env.NODE_ENV || "development";
 const config = require("../config/config")[env];
@@ -26,6 +27,7 @@ db.DM = dm;
 db.User = user;
 db.Mention = mention;
 db.WorkspaceMember = workspaceMember;
+db.Memory = memory;
 
 Object.keys(db).forEach((modelName) => {
   db[modelName].init(sequelize);
